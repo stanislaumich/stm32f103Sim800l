@@ -55,5 +55,5 @@ void loop() {
  display.display();
  cc=false;
  }
- //delay(100);
+ //delay(100); AT+CCLK="20/12/05,00:11:33+03"  AT+CCLK? AT&W0   ATZ0
 }
