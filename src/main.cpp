@@ -63,37 +63,13 @@ List all SMS messages. AT+CMGL="ALL"
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306_STM32.h>
-
+#include "Sim800.h"
 
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
 
 void log(String s){
   Serial.println(s);
-}
-
-void parseSMS(String msg) {
-  String msgheader  = "";
-  String msgbody    = "";
-  String msgphone    = "";
-
-   msg = msg.substring(msg.indexOf("+CMGR: "));//R
-  msgheader = msg.substring(0, msg.indexOf("\r"));
-
-  msgbody = msg.substring(msgheader.length() + 2);
-  msgbody = msgbody.substring(0, msgbody.lastIndexOf("OK"));
-  msgbody.trim();
-
-  int firstIndex = msgheader.indexOf("\",\"") + 3;
-  int secondIndex = msgheader.indexOf("\",\"", firstIndex);
-  msgphone = msgheader.substring(firstIndex, secondIndex);
-
-  Serial.println("Phone: "+msgphone);
-  Serial.println("Message: "+msgbody);
-
-  // Далее пишем логику обработки SMS-команд.
-  // Здесь также можно реализовывать проверку по номеру телефона
-  // И если номер некорректный, то просто удалить сообщение.
 }
 
 String s1writewait(String s){
@@ -147,18 +123,29 @@ bool initsim800time(void){
  // время установлено в модуле AT+CCLK?
  return true;
 }
-
+void initsim800(void){
+  String s;
+s="AT+DDET=1";
+ //log(s);
+ log(s1writewait(s));
+//s="AT+DDET=1";
+ //log(s);
+// log(s1writewait(s));
+}
 
 
 void setup() {
   Serial1.begin(57600);
   Serial.begin(57600);
+ /*
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-parseSMS("");  
+  */
+//parseSMS("");  
 Serial.println("Starting...");
 
+initsim800();
 
 if (initsim800time()){log("Time is set.");log(s1writewait("AT+CCLK?"));}else{log("Time set error.");}
 display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
@@ -181,29 +168,44 @@ void loop() {
    if (Serial.available() > 0) {
 //    char inByte = Serial.read();
     String instr = Serial.readString();
+    instr.trim();
+    if(instr=="1"){initsim800time();}
+    else if(instr=="2"){
+      sendSMSinPDU("+375298689352", "Привет это тестовая СМС");
+    }
+    else{
     Serial1.println(instr);
+    }
 //    Serial1.write(inByte);
   }
   delay(200);
   String s="";
   if (Serial1.available() > 0) {
-    //char inByte = Serial1.read();
     s=Serial1.readString();
-    //s+=inByte;
-    //Serial.write(inByte);
+    s.trim();
+    if(s=="RING"){
+     s1writewait("ATA");
+     delay(300); 
+     s1writewait("AT+VTS=\"3,7,5,2,9,3,7,6,6,0,7,4\"");
+     delay(1000);
+     s1writewait("AT+VTS=\"3,7,5,2,9,3,7,6,6,0,7,4\"");
+     delay (1000);
+     s1writewait("ATH0");
+    }
     Serial.println(s);
     cc=true;
   }
+  //AT+VTS="3,7,5,2,9,3,7,6,6,0,7,4"
  display.clearDisplay();
  display.setTextSize(1);
  display.setTextColor(WHITE);
- display.setCursor(0,0);
+ //display.setCursor(0,0);
  display.println(s);
  if(cc){
  display.display();
  cc=false;
  }
- //delay(100); AT+CCLK="20/12/05,00:11:33+03"  AT+CCLK? AT&W0   ATZ0   AT+COPS=? — список операторов в сети.
+ //delay(100); AT+CCLK="20/12/06,17:39:33+03"  AT+CCLK? AT&W0   ATZ0   AT+COPS=? — список операторов в сети.
 }//AT+CCLK="20/12/05,18:03:00+03"
 
 
