@@ -63,7 +63,7 @@ List all SMS messages. AT+CMGL="ALL"
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306_STM32.h>
-#include "Sim800.h"
+//#include "Sim800.h"
 
 #define OLED_RESET 4
 Adafruit_SSD1306 display(OLED_RESET);
@@ -171,7 +171,7 @@ void loop() {
     instr.trim();
     if(instr=="1"){initsim800time();}
     else if(instr=="2"){
-      sendSMSinPDU("+375298689352", "Привет это тестовая СМС");
+      //sendSMSinPDU("+375298689352", "Привет это тестовая СМС");
     }
     else{
     Serial1.println(instr);
